@@ -4,16 +4,17 @@ import { PokeResponse } from './interfaces/poke-response.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { Pokemon } from 'src/pokemon/entities/pokemon.entity';
 import { Model } from 'mongoose';
+import { AxiosAdapter } from 'src/common/adapters/axios.adapter';
 
 @Injectable()
 export class SeedService {
 
   private readonly apiUrl = 'https://pokeapi.co/api/v2/pokemon?limit=151';
-  private readonly axios: AxiosInstance = axios;
 
   constructor(
       @InjectModel(Pokemon.name)
-      private readonly pokemonModel:Model<Pokemon>
+      private readonly pokemonModel:Model<Pokemon>,
+      private readonly http: AxiosAdapter,
     ){}
 
   // async executeSeed() {
@@ -40,11 +41,11 @@ export class SeedService {
   async executeSeed() {
      await this.pokemonModel.deleteMany({});
 
-    const response = await this.axios.get<PokeResponse>(this.apiUrl);
+    const response = await this.http.get<PokeResponse>(this.apiUrl);
 
     const promInsert: {name: string, no: number}[] = [];
 
-    response.data.results.forEach( async ({name, url}) => {
+    response.results.forEach( async ({name, url}) => {
       const segments = url.split('/').filter(segment => segment);
       const no = +segments[segments.length - 1];
       promInsert.push({no,name});
