@@ -1,0 +1,23 @@
+# Install dependencies only when needed
+FROM node:24-alpine3.22
+
+RUN mkdir -p /api/pokedex
+WORKDIR /api/pokedex
+
+COPY . ./api/pokedex
+COPY package.json tsconfig.json tsconfig /api/pokedex/
+RUN yarn install --prod
+RUN yarn builder
+
+#Dar permiso para ejecutar la aplicacion
+RUN adduser --disabled-password pokeuser
+RUN chown -R pokeuser:pokeuser /api/pokedex
+USER pokeuser
+
+# Limpiar el cache de yarn
+RUN yarn cache clean --force
+
+
+EXPOSE 4000
+
+CMD ["yarn","start"]
